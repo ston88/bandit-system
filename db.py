@@ -2,6 +2,7 @@ import argparse
 import pymssql
 from timeit import default_timer as timer
 from abc import ABC, abstractmethod
+import xml.etree.ElementTree as ET
 
 class Database(ABC):
     def __init__(self):
@@ -32,7 +33,8 @@ class MssqlDatabase(Database):
         self.conn = pymssql.connect(server=kwargs.get('server'),
                                     user=kwargs.get('username'),
                                     password=kwargs.get('password'),
-                                    database=kwargs.get('database'))
+                                    database=kwargs.get('database'),
+                                    as_dict=True)
         self.cursor = self.conn.cursor()
 
     def create_index(self, tbl_name, col_names, idx_name):
@@ -48,11 +50,24 @@ class MssqlDatabase(Database):
         self.conn.commit()
 
     def time_query(self, query):
-        start = timer()
         self.cursor.execute(query)
         self.conn.commit()
-        end = timer()
-        return end - start
+        time = 0
+        # self.cursor.execute('''With cteQueries As ( SELECT * FROM sys.dm_exec_query_stats AS qs CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) AS st)''')
+        stats_q = '''SELECT * FROM sys.dm_exec_query_stats AS qs CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle)'''
+        self.cursor.execute(stats_q)
+        row = self.cursor.fetchone()
+        while row:
+            if query == row['text']:
+                print(row)
+                break
+            row = self.cursor.fetchone()
+        self.cursor.execute(f'''SELECT * FROM sys.dm_exec_text_query_plan({'0x' + row['plan_handle'].hex()}, 0, -1)''')
+        row = self.cursor.fetchone()
+        while row:
+            print(ET.fromstring(row['query_plan']))
+            row = self.cursor.fetchone()
+        return time
 
 def main(*args, **kwargs):
     parser = argparse.ArgumentParser(description="Connect to MSSQL DB.")
@@ -68,6 +83,7 @@ def main(*args, **kwargs):
     kwargs = vars(parser.parse_args())
     db = MssqlDatabase()
     db.connect(**kwargs)
+    db.time_query('SELECT * FROM dbo.NATION')
 
 if __name__ == '__main__':
     main()

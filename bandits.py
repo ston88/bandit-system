@@ -1,5 +1,5 @@
 import random
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 import math
 
 
@@ -53,7 +53,7 @@ class Softmax(BanditAlgorithm):
         z = random.random()
         cum_prob = 0.0
         for i in range(len(probs)):
-            prob = prob[i]
+            prob = probs[i]
             cum_prob += prob
             if cum_prob > z:
                 return i
@@ -69,7 +69,10 @@ class Softmax(BanditAlgorithm):
         c = self.counts[arm]
         self.values[arm] = ((self.values[arm] * (c - 1)) + reward) / float(c)
 
-
+class AnnealingSoftmax(Softmax):
+    def update(self, arm, reward):
+        super.update(self, arm, reward)
+        self.temperature = self.temperature / (1 + math.log(1 + self.))
 
 
 

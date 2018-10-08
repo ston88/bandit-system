@@ -58,21 +58,3 @@ def plot_cumulative_rewards(num_sims, horizon, cumulative_rewards):
     plt.xlabel("Time")
     plt.ylabel("Average Cumulative Reward")
     plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

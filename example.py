@@ -1,6 +1,6 @@
 import random
 from testing import BernoulliArm
-from bandits import EpsilonGreedy
+from bandits import EpsilonGreedy, Softmax
 from testing import test_algorithm
 from plotting import plot_arm_probs, plot_average_rewards, plot_cumulative_rewards
 
@@ -15,8 +15,8 @@ def main():
     num_sims = 5000
     horizon = 500
     l = list(map(lambda x: x * 0.1, range(1, 6)))
-    for epsilon in l:
-        algo = EpsilonGreedy(epsilon=epsilon, n_arms=n_arms)
+    for t in l:
+        algo = Softmax(temperature=t, n_arms=n_arms)
         res = test_algorithm(algo, arms, num_sims=num_sims, horizon=horizon)
         cumulative_rewards = res[4]
         rewards = res[3]
